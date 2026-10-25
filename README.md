@@ -23,8 +23,3 @@ OpenPERouter router DaemonSet. Enable the chart value
 The driver DaemonSet mounts that directory and Grout's host control socket.
 Enable KubeVirt's `NetworkDevicesWithDRA` feature gate and its `vhostuser`
 binding separately.
-
-The existing cookbook3 records the earlier in-tree POC. Its router, KubeVirt,
-and VMI steps still apply, but build this image here, apply `deploy/groutdra.yaml`,
-and use the Helm value above instead of patching the router DaemonSet. Cluster
-validation of the standalone layout is pending.

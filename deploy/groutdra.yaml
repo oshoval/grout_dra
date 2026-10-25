@@ -1,6 +1,5 @@
 # grout kubelet DRA plugin (driver grout.openperouter.io).
 # Publishes KEP-5304 vhost-user-path metadata for kubevirt/vhostuser-network-binding-plugin.
-# Image: make groutdra-docker-build (quay.io/oshoval/groutdra:dev).
 apiVersion: v1
 kind: ServiceAccount
 metadata:
