@@ -3,9 +3,11 @@
 package groutdra
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -89,16 +91,33 @@ func removeMetadataIfOwned(uid types.UID, path string) error {
 	if err != nil {
 		return err
 	}
-	var metadata struct {
-		Metadata struct {
-			UID types.UID `json:"uid"`
-		} `json:"metadata"`
+	// Kubelet can persist multiple API versions as consecutive JSON objects.
+	// Check every one before removing a path shared by claims from a template.
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	seen := false
+	for {
+		var metadata struct {
+			Metadata struct {
+				UID types.UID `json:"uid"`
+			} `json:"metadata"`
+		}
+		err := decoder.Decode(&metadata)
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("reading metadata owner %s: %w", path, err)
+		}
+		if metadata.Metadata.UID == "" {
+			return fmt.Errorf("reading metadata owner %s: missing UID", path)
+		}
+		seen = true
+		if metadata.Metadata.UID != uid {
+			return nil
+		}
 	}
-	if err := json.Unmarshal(data, &metadata); err != nil {
-		return fmt.Errorf("reading metadata owner %s: %w", path, err)
-	}
-	if metadata.Metadata.UID != uid {
-		return nil
+	if !seen {
+		return fmt.Errorf("reading metadata owner %s: empty file", path)
 	}
 	return os.Remove(path)
 }
